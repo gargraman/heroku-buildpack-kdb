@@ -1,0 +1,8 @@
+#this file is sourced from bin/detect, bin/compile and bin/release
+# it is assumed that <BUILD_DIR> is set before this file is sourced.
+
+KDB_VER="3.2"
+KDB_URL="https://s3-ap-southeast-1.amazonaws.com/heroku-buildtool-kdb/linux-installer-${KDB_VER}.zip"
+
+VENDORING_DIR="$BUILD_DIR/.buildpack"
+KDB_HOME=$VENDORING_DIR/kdb-$KDB_VER
