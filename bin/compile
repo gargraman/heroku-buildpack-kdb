@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# bin/compile <build-dir> <cache-dir>
+
+# fail fast
+set -e
+
+# debug
+# set -x
+
+shopt -s extglob
+
+function error() {
+  echo " !     $*" >&2
+  exit 1
+}
+
+function indent() {
+  c='s/^/       /'
+  case $(uname) in
+    Darwin) sed -l "$c";;
+    *)      sed -u "$c";;
+  esac
+}
+
+# clean up leaking environment
+unset GIT_DIR
+
+# parse and derive params
+BUILD_DIR=$1
+CACHE_DIR="$2/vendor"
+LP_DIR=`cd $(dirname $0); cd ..; pwd`
+BUILDPACK_DIR="$(dirname $(dirname $0))"
+
+# config
+R_VERSION="3.1.0"
+BUILD_PACK_VERSION="20140608-1824"
+
+S3_BUCKET="heroku-buildpack-r"
+R_BINARIES="http://${S3_BUCKET}.s3.amazonaws.com/R-${R_VERSION}-binaries-${BUILD_PACK_VERSION}.tar.gz"
+
+VENDOR_DIR="$BUILD_DIR/vendor"
+R_BASE="$VENDOR_DIR/R"
+CRAN_MIRROR="http://cran.revolutionanalytics.com"
+
+mkdir -p $CACHE_DIR
+
+# vendor R into the slug
+echo "Vendoring R $R_VERSION" | indent
+
+# download and unpack binaries
+echo "Downloading and unpacking R binaries" | indent
+mkdir -p $VENDOR_DIR && curl $R_BINARIES -s -o - | tar xzf - -C $VENDOR_DIR
+
+# need to copy the binaries to /app/vendor so that R works
+mkdir -p /app/vendor/gcc
+cp -R $VENDOR_DIR/gcc/* /app/vendor/gcc
+
+mkdir -p /app/vendor/glibc
+cp -R $VENDOR_DIR/glibc/* /app/vendor/glibc
+
+mkdir -p /app/vendor/gsl
+cp -R $VENDOR_DIR/gsl/* /app/vendor/gsl
+
+mkdir -p /app/vendor/R
+cp -R $VENDOR_DIR/R/* /app/vendor/R
+
+# HACK: need to copy over the gcc libs so that packages can find them
+mkdir -p /app/vendor/R/lib64/R/lib
+cp /app/vendor/gcc/lib64/* /app/vendor/R/lib64/R/lib
+
+# R needs to know where gfortran and glibc header files are
+export PATH="/app/vendor/R/bin:/app/vendor/gcc/bin:$PATH"
+
+export LDFLAGS="-L/app/vendor/gcc/lib64 -L/app/vendor/gsl/lib"
+export CPPFLAGS="-I/app/vendor/glibc/string -I/app/vendor/glibc/time -I/app/vendor/gsl/include"
+export PKG_LDFLAGS=$LDFLAGS
+export PKG_CPPFLAGS=$CPPFLAGS
+
+export R_HOME=$R_BASE/lib64/R
+export R_INCLUDE=$R_HOME/include
+
+# copy over environment
+mkdir -p $BUILD_DIR/.profile.d
+cp "$BUILDPACK_DIR/bin/r_environment.sh" $BUILD_DIR/.profile.d/r_environment.sh
+
+# prevent warnings when building packages
+mkdir -p /app/vendor/R/lib64/R/doc/html
+touch /app/vendor/R/lib64/R/doc/html/R.css
+
+# install dependencies from CRAN
+echo "Executing init.r script" | indent
+
+# set the CRAN mirror and run the init.r program
+/app/vendor/R/bin/R -s <<RPROG > indent
+  Sys.setenv(BUILD_DIR="$BUILD_DIR")
+  setwd("$BUILD_DIR")
+  r <- getOption("repos");
+  r["CRAN"] <- "$CRAN_MIRROR";
+  options(repos=r);
+  `cat $BUILD_DIR/init.r`
+RPROG
+
+echo "R $R_VERSION successfully installed" | indent
+
+# need to copy binaries back so that any installed packages are included in the slug
+cp -R /app/vendor/R/* $VENDOR_DIR/R
