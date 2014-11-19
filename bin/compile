@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env bash -x
 # bin/compile <build-dir> <cache-dir>
 
 # fail fast
@@ -37,7 +37,10 @@ if [ -x $KDB_HOME/q ] ; then
 	echo "-----> Using KDB $KDB_VER....."
 else
 	echo "-----> Installing KDB $KDB_VER...from '$KDB_URL' ... [start]"
-	curl --max-time 180 --location $KDB_URL | unzip
+	TMPFILE='tempfile.zip'
+	curl --max-time 180 --location $KDB_URL -o $TMPFILE
+	unzip -d $VENDORING_DIR $TMPFILE
+	rm $TMPFILE
 	chmod +x $KDB_HOME/q
 	echo "-----> Installing KDB $KDB_VER..... [done ]!"
 fi
