@@ -36,17 +36,17 @@ if [ -x $KDB_HOME/q ] ; then
     #assuming kdb is already installed...
 	echo "-----> Using KDB $KDB_VER....."
 else
-	echo "-----> Installing KDB $KDB_VER..... [start]"
-	curl --max-time 180 --location $KDB_URL | tar xz
+	echo "-----> Installing KDB $KDB_VER...from '$KDB_URL' ... [start]"
+	curl --max-time 180 --location $KDB_URL | unzip
 	chmod +x $KDB_HOME/q
 	echo "-----> Installing KDB $KDB_VER..... [done ]!"
 fi
 
 export QHOME=$KDB_HOME/q
 export PATH=$PATH:$QHOME/l32
-alias q="rlwrap $QHOME/l32/q"
+#alias q="rlwrap $QHOME/l32/q"
 
-# yum install ia32-libs && yum install rlwrap
+# apt-get install ia32-libs && yum install rlwrap
 
 if [ ! -f $BUILD_DIR/init.q ] ; then
 	echo "Failed to run app with KDB q"
