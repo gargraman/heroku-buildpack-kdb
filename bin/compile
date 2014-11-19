@@ -27,10 +27,10 @@ function indent() {
 
 
 #create the cache dir if it doesn't exist
-mkdir -p $VENDORING_DIR
+mkdir -p $KDB_HOME
 
 # change to vendoring dir to install kx kdb
-cd $VENDORING_DIR
+cd $KDB_HOME
 
 if [ -x $KDB_HOME/q ] ; then
     #assuming kdb is already installed...
@@ -39,7 +39,7 @@ else
 	echo "-----> Installing KDB $KDB_VER...from '$KDB_URL' ... [start]"
 	TMPFILE='tempfile.zip'
 	curl --max-time 180 --location $KDB_URL -o $TMPFILE
-	unzip -d $VENDORING_DIR $TMPFILE
+	unzip -d $KDB_HOME $TMPFILE
 	rm $TMPFILE
 	chmod +x $KDB_HOME/q
 	echo "-----> Installing KDB $KDB_VER..... [done ]!"
