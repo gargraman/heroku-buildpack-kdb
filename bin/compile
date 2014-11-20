@@ -59,7 +59,7 @@ fi
 cd ${BUILD_DIR}
 
 # build app
-BUILDCMD="$QHOME/q init.q"
+BUILDCMD="$QHOME/l32/q init.q"
 echo "-----> executing $BUILDCMD"
 
 $BUILDCMD 2>&1 | indent
