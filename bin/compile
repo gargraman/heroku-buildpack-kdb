@@ -45,21 +45,26 @@ else
 	echo "-----> Installing KDB $KDB_VER..... [done ]!"
 fi
 
-export QHOME=$KDB_HOME/q
-export PATH=$PATH:$QHOME/l32
 #alias q="rlwrap $QHOME/l32/q"
-
-# apt-get install ia32-libs && yum install rlwrap
+#apt-get install ia32-libs && yum install rlwrap
 
 if [ ! -f $BUILD_DIR/init.q ] ; then
 	echo "Failed to run app with KDB q"
 fi
 
+
+# need to copy the binaries to /app/vendor so that R works
+mkdir -p /app/vendor/q
+cp -R $KDB_HOME/q/* /app/vendor/q
+
+export QHOME=/app/vendor/q
+export PATH=$PATH:$QHOME/l32
+
 # change to build dir to run ant
 cd ${BUILD_DIR}
 
 # build app
-BUILDCMD="$QHOME/l32/q init.q"
+BUILDCMD="q init.q"
 echo "-----> executing $BUILDCMD"
 
 $BUILDCMD 2>&1 | indent
