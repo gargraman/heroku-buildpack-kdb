@@ -54,15 +54,15 @@ fi
 
 
 # need to copy the binaries to /app/vendor so that R works
-mkdir -p /app/vendor/q
-	echo "making /app/vendor/q"
+#mkdir -p /app/vendor/q
+#	echo "making /app/vendor/q"
 
-cp -R $KDB_HOME/q/* /app/vendor/q
-	echo "running cp -R $KDB_HOME/q/* /app/vendor/q"
+#cp -R $KDB_HOME/q/* /app/vendor/q
+#	echo "running cp -R $KDB_HOME/q/* /app/vendor/q"
 	
-chmod +x /app/vendor/*
+#chmod +x /app/vendor/*
 
-export QHOME=/app/vendor/q
+export QHOME=$KDB_HOME/q
 export PATH=$PATH:$QHOME/l32
 	echo "new PATH $PATH and QHOME $QHOME"
 
